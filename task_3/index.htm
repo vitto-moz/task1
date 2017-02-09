@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Task 3</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<!--jquery is only for bootstrap usage -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+	<div ng-app="myApp" ng-controller="myCtrl"> 
+		<div class="container">
+			<h2>Requests results:</h2>
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th>request #</th>
+						<th>text</th>
+						<th>request execution time</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="response in responses">
+						<td>{{$index+1}}</td>
+						<td>{{response.data}}</td>
+						<td>{{response.requestTime}} ms</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<script>
+		var app = angular.module('myApp', []);
+		app.controller('myCtrl', function($scope, $http, $q) {
+			// initialization
+			$scope.responses = [];
+			var response1 = {};
+			var response2 = {};
+		    var response3 = {};
+
+			// prepare requests for simultaneously call
+			var promiseOne = $http.get('http://127.0.0.1:8081/get1');
+			var promiseTwo = $http.get('http://127.0.0.1:8081/get2');
+
+			// get start time of requests
+			var startTime = new Date().getTime();
+
+			// make two requests simultaneously
+			$q.all([promiseOne, promiseTwo]).then( function (response) {
+			   	var requestTime = new Date().getTime() - startTime;
+			  	
+			  	// get first response info
+			    response1["data"] = response[0]["data"];
+			    response1["requestTime"] = requestTime;
+			    $scope.responses.push(response1);	
+   
+			  	// get second response info
+			    response2["data"] = response[1]["data"];
+			    response2["requestTime"] = requestTime;
+			    $scope.responses.push(response2);
+
+			    // pass forward request info
+			    return response[0]	
+			}, function error(response) {
+				// error handler
+				response1["data"] = response.statusText;
+				response2["data"] = response.statusText;
+				$scope.responses.push(response1);	
+				$scope.responses.push(response2);
+				return response	
+
+			}).then( function (previousResult) {
+					// in case of appropriate result of previous request
+					// make a third request
+					if (previousResult.status === 200) {
+						$http.get('http://127.0.0.1:8081/get3')
+							.then(function (response) {
+								var requestTime = new Date().getTime() - startTime;
+								response3["data"] = response.data;
+								response3["requestTime"] = requestTime;
+								$scope.responses.push(response3);
+							}, function error(response) {
+								response3["data"] = response.statustext;
+								$scope.responses.push(response3);	
+							});
+					} else {
+						response3["data"] = "Previous Requests Failed";
+						$scope.responses.push(response3);	
+					}
+			});
+		});
+	</script>
+</body>
+</html>
