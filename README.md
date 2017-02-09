@@ -14,4 +14,4 @@ task_2
 
 task_3
 
-1. 
+1. cd task_2
