@@ -14,4 +14,9 @@ task_2
 
 task_3
 
-1. cd task_2
+0. install Nodejs: https://nodejs.org/uk/
+1. cd task_3
+2. npm install
+3. node server.js
+4. http://127.0.0.1:8081/index.htm
+
